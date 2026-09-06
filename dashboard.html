@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Student Management System</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark">SM</span>
+      <span class="brand-name">Student Manager</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="students.html">Students</a>
+      <a href="student-add.html" class="admin-only">Add Student</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <span class="user-avatar js-user-avatar"></span>
+        <div class="user-meta">
+          <span class="user-name js-user-name"></span>
+          <span class="user-role js-user-role"></span>
+        </div>
+      </div>
+      <a href="#" class="logout-link" id="logoutBtn">Log out</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Dashboard</h1>
+        <p>An overview of your student records.</p>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card stat-primary">
+        <div class="stat-label">Total students</div>
+        <div class="stat-value" id="statTotal">—</div>
+        <div class="stat-sub" id="statActiveSub">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Recent registrations</div>
+        <div class="stat-value" id="statRecent">—</div>
+        <div class="stat-sub">In the last 7 days</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Your role</div>
+        <div class="stat-value js-user-role" style="font-size:20px; text-transform:capitalize;">—</div>
+        <div class="stat-sub" id="statRoleSub">—</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="panel-title">Recently added students</h2>
+      <div id="latestWrap">
+        <p class="empty-state">Loading...</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+<script>
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+  }
+
+  function formatDate(str) {
+    if (!str) return "—";
+    return new Date(str.replace(" ", "T")).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  async function loadDashboard() {
+    try {
+      const data = await apiFetch("api/dashboard/stats.php");
+
+      document.getElementById("statTotal").textContent = data.total;
+      document.getElementById("statActiveSub").textContent = data.active + " currently active";
+      document.getElementById("statRecent").textContent = data.recent;
+      document.getElementById("statRoleSub").textContent =
+        window.currentUser.role === "admin" ? "Full access" : "View & search only";
+
+      const wrap = document.getElementById("latestWrap");
+      if (data.latest.length === 0) {
+        wrap.innerHTML = '<p class="empty-state">No students yet.</p>';
+        return;
+      }
+
+      let html = '<table><thead><tr><th>Name</th><th>Email</th><th>Course</th><th>Status</th><th>Added</th></tr></thead><tbody>';
+      data.latest.forEach((s) => {
+        html += `<tr>
+          <td data-label="Name">${escapeHtml(s.full_name)}</td>
+          <td data-label="Email">${escapeHtml(s.email)}</td>
+          <td data-label="Course">${escapeHtml(s.course || "—")}</td>
+          <td data-label="Status"><span class="badge badge-${s.status}">${s.status === "active" ? "Active" : "Inactive"}</span></td>
+          <td data-label="Added">${formatDate(s.created_at)}</td>
+        </tr>`;
+      });
+      html += "</tbody></table>";
+      wrap.innerHTML = html;
+    } catch (err) {
+      document.getElementById("latestWrap").innerHTML =
+        '<p class="empty-state">Could not load dashboard data: ' + escapeHtml(err.message) + "</p>";
+    }
+  }
+
+  // nav.js fires "user-ready" once the session check succeeds
+  document.addEventListener("user-ready", loadDashboard);
+</script>
+</body>
+</html>

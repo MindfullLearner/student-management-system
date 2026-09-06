@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - Student Management System</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card">
+    <h1>Create an account</h1>
+    <p class="subtitle">Register to start managing student records.</p>
+
+    <div class="alert alert-error" id="errorAlert"></div>
+    <div class="alert alert-success" id="successAlert"></div>
+
+    <form id="registerForm" class="validate-form" novalidate>
+      <div class="form-group">
+        <label for="full_name">Full name</label>
+        <input type="text" id="full_name" name="full_name" required>
+        <span class="field-error" data-for="full_name">Enter your full name.</span>
+      </div>
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" required>
+        <span class="field-error" data-for="email">Enter a valid email address.</span>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+        <span class="field-error" data-for="password">Password must be at least 6 characters.</span>
+      </div>
+      <div class="form-group">
+        <label for="confirm_password">Confirm password</label>
+        <input type="password" id="confirm_password" name="confirm_password" required>
+        <span class="field-error" data-for="confirm_password">Passwords must match.</span>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;" id="registerBtn">
+        <span class="spinner"></span>
+        <span class="btn-text">Register</span>
+      </button>
+    </form>
+
+    <div class="auth-switch">
+      Already have an account? <a href="login.html">Log in</a>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/api.js"></script>
+<script src="assets/js/validation.js"></script>
+<script>
+  document.getElementById("registerForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (!validateForm(this)) return;
+
+    const errorAlert = document.getElementById("errorAlert");
+    const successAlert = document.getElementById("successAlert");
+    errorAlert.classList.remove("visible");
+    successAlert.classList.remove("visible");
+
+    const btn = document.getElementById("registerBtn");
+    btn.classList.add("loading");
+    btn.disabled = true;
+
+    try {
+      const data = await apiFetch("api/auth/register.php", {
+        method: "POST",
+        body: {
+          full_name: document.getElementById("full_name").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          password: document.getElementById("password").value,
+          confirm_password: document.getElementById("confirm_password").value,
+        },
+      });
+      successAlert.textContent = data.message;
+      successAlert.classList.add("visible");
+      this.reset();
+    } catch (err) {
+      errorAlert.textContent = err.message;
+      errorAlert.classList.add("visible");
+    } finally {
+      btn.classList.remove("loading");
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

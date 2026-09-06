@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in - Student Management System</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="auth-shell">
+  <div class="auth-card">
+    <h1>Welcome back</h1>
+    <p class="subtitle">Log in to manage your student records.</p>
+
+    <div class="alert alert-error" id="errorAlert"></div>
+
+    <form id="loginForm" class="validate-form" novalidate>
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" name="email" required>
+        <span class="field-error" data-for="email">Enter a valid email address.</span>
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+        <span class="field-error" data-for="password">Password must be at least 6 characters.</span>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;" id="loginBtn">
+        <span class="spinner"></span>
+        <span class="btn-text">Log in</span>
+      </button>
+    </form>
+
+    <div class="auth-switch">
+      Don't have an account? <a href="register.html">Register</a>
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/api.js"></script>
+<script src="assets/js/validation.js"></script>
+<script>
+  document.getElementById("loginForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (!validateForm(this)) return;
+
+    const errorAlert = document.getElementById("errorAlert");
+    errorAlert.classList.remove("visible");
+
+    const btn = document.getElementById("loginBtn");
+    btn.classList.add("loading");
+    btn.disabled = true;
+
+    try {
+      await apiFetch("api/auth/login.php", {
+        method: "POST",
+        body: {
+          email: document.getElementById("email").value.trim(),
+          password: document.getElementById("password").value,
+        },
+      });
+      window.location.href = "dashboard.html";
+    } catch (err) {
+      errorAlert.textContent = err.message;
+      errorAlert.classList.add("visible");
+      btn.classList.remove("loading");
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

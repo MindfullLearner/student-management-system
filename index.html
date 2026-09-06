@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Management System</title>
+  <script src="assets/js/api.js"></script>
+  <script>
+    apiFetch("api/auth/session.php")
+      .then(() => (window.location.href = "/dashboard.html"))
+      .catch(() => (window.location.href = "/login.html"));
+  </script>
+</head>
+<body></body>
+</html>

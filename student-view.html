@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Details - Student Management System</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark">SM</span>
+      <span class="brand-name">Student Manager</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="students.html" class="active">Students</a>
+      <a href="student-add.html" class="admin-only">Add Student</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <span class="user-avatar js-user-avatar"></span>
+        <div class="user-meta">
+          <span class="user-name js-user-name"></span>
+          <span class="user-role js-user-role"></span>
+        </div>
+      </div>
+      <a href="#" class="logout-link" id="logoutBtn">Log out</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1 id="studentName">Loading...</h1>
+        <p>Student record details.</p>
+      </div>
+      <a href="#" class="btn btn-accent admin-only" id="editLink">Edit</a>
+    </div>
+
+    <div class="panel" style="max-width:560px;">
+      <table id="detailsTable">
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <a href="students.html" class="btn btn-ghost">&larr; Back to list</a>
+  </main>
+</div>
+
+<script src="assets/js/api.js"></script>
+<script src="assets/js/nav.js"></script>
+<script>
+  const studentId = new URLSearchParams(window.location.search).get("id");
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+  }
+
+  function formatDate(str, withTime) {
+    if (!str) return "—";
+    const d = new Date(str.replace(" ", "T"));
+    return withTime
+      ? d.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+      : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  document.addEventListener("user-ready", async function () {
+    if (!studentId) {
+      window.location.href = "students.html";
+      return;
+    }
+
+    try {
+      const data = await apiFetch("api/students/get.php?id=" + studentId);
+      const s = data.student;
+
+      document.getElementById("studentName").textContent = s.full_name;
+      document.getElementById("editLink").href = "/student-edit.html?id=" + s.id;
+
+      const rows = [
+        ["Full name", escapeHtml(s.full_name)],
+        ["Email", escapeHtml(s.email)],
+        ["Phone", escapeHtml(s.phone || "—")],
+        ["Course", escapeHtml(s.course || "—")],
+        ["Enrollment date", formatDate(s.enrollment_date)],
+        ["Status", `<span class="badge badge-${s.status}">${s.status === "active" ? "Active" : "Inactive"}</span>`],
+        ["Record added", formatDate(s.created_at, true)],
+      ];
+
+      document.querySelector("#detailsTable tbody").innerHTML = rows
+        .map(
+          ([label, value]) =>
+            `<tr><td data-label="Field" style="width:160px; color:var(--ink-muted);">${label}</td><td data-label="Value">${value}</td></tr>`
+        )
+        .join("");
+    } catch (err) {
+      document.getElementById("studentName").textContent = "Could not load student";
+    }
+  });
+</script>
+</body>
+</html>

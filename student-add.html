@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Student - Student Management System</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="brand-mark">SM</span>
+      <span class="brand-name">Student Manager</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="students.html">Students</a>
+      <a href="student-add.html" class="active admin-only">Add Student</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-chip">
+        <span class="user-avatar js-user-avatar"></span>
+        <div class="user-meta">
+          <span class="user-name js-user-name"></span>
+          <span class="user-role js-user-role"></span>
+        </div>
+      </div>
+      <a href="#" class="logout-link" id="logoutBtn">Log out</a>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Add student</h1>
+        <p>Create a new student record.</p>
+      </div>
+    </div>
+
+    <div class="alert alert-error" id="errorAlert"></div>
+
+    <form id="addForm" class="form-card validate-form" novalidate>
+      <div class="form-group">
+        <label for="full_name">Full name</label>
+        <input type="text" id="full_name" name="full_name" required>
+        <span class="field-error" data-for="full_name">Enter the student's full name.</span>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required>
+        <span class="field-error" data-for="email">Enter a valid email address.</span>
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" name="phone">
+      </div>
+      <div class="form-group">
+        <label for="course">Course</label>
+        <input type="text" id="course" name="course">
+      </div>
+      <div class="form-group">
+        <label for="enrollment_date">Enrollment date</label>
+        <input type="date" id="enrollment_date" name="enrollment_date">
+      </div>
+      <div class="form-group">
+        <label for="status">Status</label>
+        <select id="status" name="status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary" id="saveBtn">
+        <span class="spinner"></span>
+        <span class="btn-text">Save student</span>
+      </button>
+      <a href="students.html" class="btn btn-ghost">Cancel</a>
+    </form>
+  </main>
+</div>
+
+<script src="assets/js/api.js"></script>
+<script src="assets/js/validation.js"></script>
+<script src="assets/js/nav.js"></script>
+<script>
+  // Only admins should be here; redirect anyone else back to the students list.
+  document.addEventListener("user-ready", function (e) {
+    if (e.detail.role !== "admin") window.location.href = "/students.html";
+  });
+
+  document.getElementById("addForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (!validateForm(this)) return;
+
+    const errorAlert = document.getElementById("errorAlert");
+    errorAlert.classList.remove("visible");
+    const btn = document.getElementById("saveBtn");
+    btn.classList.add("loading");
+    btn.disabled = true;
+
+    try {
+      await apiFetch("/api/students/create.php", {
+        method: "POST",
+        body: {
+          full_name: document.getElementById("full_name").value.trim(),
+          email: document.getElementById("email").value.trim(),
+          phone: document.getElementById("phone").value.trim(),
+          course: document.getElementById("course").value.trim(),
+          enrollment_date: document.getElementById("enrollment_date").value,
+          status: document.getElementById("status").value,
+        },
+      });
+      window.location.href = "/students.html";
+    } catch (err) {
+      errorAlert.textContent = err.message;
+      errorAlert.classList.add("visible");
+      btn.classList.remove("loading");
+      btn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
